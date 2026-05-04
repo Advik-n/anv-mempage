@@ -1,0 +1,275 @@
+A I/ML CLUB · BUILD DOCUMENTATION
+Anveshan
+Website
+Build Guide
+A design and development reference for the
+team. Architecture, data patterns, per-page
+specs, and UI rules — everything in one place.
+Next.js Tailwind CSS TypeScript HTML/CSS/JS
+DIRECTION Editorial-minimal · Indigo accent
+TEAM Ashmit · Drrutiii · Sameer · Advik · Anish
+VERSION 1.0 — May 2026
+1
+0 1 — DESIGN SYSTEM
+Design
+Foundations
+Everyone on the team should pull from the same values. Before building any page, set these up
+in your tailwind.config.js or as CSS variables. This is how the site stays visually consistent even
+though different people are building different pages.
+Using AI tools? Always start your prompt with: "I'm building a tech club website. Indigo accent only,
+white background, Tailwind CSS, no purple gradients, clean editorial style." Otherwise you'll get
+generic output.
+Color
+accent
+#4F46E5
+accent-light
+#EEF2FF
+base
+#FAFAFA
+heading
+#18181B
+body
+#52525B
+muted
+#A1A1AA
+Typography
+Two fonts only — add them via Google Fonts.
+Display / Headings / Body: DM Sans or Syne
+Dates, Tags, Code snippets: JetBrains Mono
+Size scale matters more than font choice. Establish a clear H1 → body → caption ladder and stick
+to it across every page.
+// tailwind.config.js
+colors: {
+accent: '#4F46E5', // indigo-600 — the only accent
+'accent-light': '#EEF2FF', // for badge backgrounds
+base: '#FAFAFA', // page background
+heading: '#18181B', // zinc-900
+body: '#52525B', // zinc-600
+muted: '#A1A1AA', // zinc-400
+}
+•
+•
+2
+Spacing
+If something looks cramped, add more padding. Whitespace is design — it's not wasted space.
+Sections should feel like they have room to exist.
+Interactions
+Hover: Border-color shift or scale(1.02) — pick one and apply it site-wide.
+Micro-interactions: transition: 150ms ease
+Layout shifts / page loads: transition: 300ms ease-out
+Entry animations run once, fast. Never delay interaction.
+Glassmorphism — use it once
+Fine for one featured card or hero element. Not for every surface.
+•
+•
+•
+•
+/* The glassmorphism recipe */
+.glass-card {
+backdrop-filter: blur(12px);
+background: rgba(255, 255, 255, 0.6);
+border: 1px solid rgba(255, 255, 255, 0.3);
+box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+3
+0 2 — ARCHITECTURE
+Data Pattern — Everyone Must
+Follow
+Instead of hardcoding text inside your components, put your data in a separate JS/JSON file and
+loop through it. This means: to update content, you edit one file. Your component doesn't
+change. It also means your teammate can easily add new events, members, or blogs without
+touching any code logic.
+Folder structure
+Example — events.js
+src/
+├── data/
+│ ├── events.js ← Sameer edits this
+│ ├── members.js ← Advik edits this
+│ └── blogs.js ← Anish edits this
+└── components/
+ ├── EventCard.tsx
+ ├── MemberCard.tsx
+ └── BlogCard.tsx
+// src/data/events.js
+export const events = [
+ {
+id: 1,
+title: "ML Workshop",
+date: "2025-08-10",
+description: "Hands-on intro to scikit-learn.",
+tag: "upcoming", // "upcoming" or "past"
+image: "/images/events/ml-workshop.jpg"
+ },
+ {
+id: 2,
+title: "Hackathon 3.0",
+date: "2025-06-01",
+description: "24-hour build sprint.",
+tag: "past",
+image: "/images/events/hackathon.jpg"
+ }
+]
+4
+How to use it in a page
+Same pattern for: members, blogs, projects. Data lives in /src/data/ . Components in /
+components/ . Pages just import and render.
+// app/events/page.tsx
+import { events } from '@/data/events'
+export default function EventsPage() {
+const upcoming = events.filter(e => e.tag === 'upcoming')
+const past = events.filter(e => e.tag === 'past')
+return (
+ <>
+ <section>
+ <h2>Upcoming</h2>
+ {upcoming.map(event => (
+ <EventCard key={event.id} {...event} />
+ ))}
+ </section>
+ <section>
+ <h2>Past</h2>
+ {past.map(event => (
+ <EventCard key={event.id} {...event} />
+ ))}
+ </section>
+ </>
+ )
+}
+5
+0 3 — PER-PAGE SPECS
+Per-Page
+Guide
+Ashmit — Landing Page, Loader,
+Footer
+app/page.tsx · Hero.tsx · Loader.tsx ·
+Footer.tsx
+Loader
+Keep it under 1.5 seconds. A pulsing indigo bracket { } or a thin progress bar across the
+top is enough. Don't build a cinematic intro — it annoys users on repeat visits.
+Hero
+Large display text, a strong subline, two buttons, and a floating preview card for depth.
+Layout:
+[Big Headline — 2 lines max, text-6xl+]
+[One-line subline describing the club]
+[Button: Join Us]  [Button: Explore →]
+         [Floating stats card or event preview]
+One filled button (indigo bg) + one ghost button (indigo outline)
+Below the fold: render <EventsPreview /> , <MembersPreview /> , <BlogsPreview /> — 3 items
+max each, with a "View All →" link
+Footer
+Three columns: Logo + tagline / Quick links / Social icons. border-t border-zinc-200 as
+separator. No gradients.
+•
+•
+6
+Drrutiii — About
+Page
+app/about/page.tsx · AboutPreview.tsx
+Use an editorial grid — not everything needs to be center-aligned. Avoid the wall-of-text
+layout.
+[Full-width headline — large, left-aligned]
+[Left: 2–3 short paragraphs]   [Right: stat or image]
+[Mission card]    [Vision card]    (side by side)
+[Timeline or founding story]
+For background texture — a subtle dot grid works well at opacity-30 or lower. It's
+atmosphere, not content:
+Cards for Mission/Vision: bg-white border border-zinc-200 rounded-2xl p-8 . No glassmorphism
+here.
+background-image: radial-gradient(circle, #e0e7ff 1px, transparent 1px);
+background-size: 24px 24px;
+7
+Sameer — Events
+Page
+app/events/page.tsx · src/data/events.js
+Use the data pattern from Section 02. Filter by tag: "upcoming" vs tag: "past" .
+EventCard props
+Visual distinction
+Upcoming: White card, indigo left-border ( border-l-4 border-indigo-600 ), full opacity
+Past: Same card, opacity-60 , no left-border, grayscale image ( filter grayscale )
+Card layout
+Image on top (16:9, object-cover ), then title, then date in monospace ( font-mono text-sm
+text-zinc-400 ), then 2-line description ( line-clamp-2 ).
+{ title, date, description, image, tag }
+•
+•
+/* Grid */
+className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+8
+Advik — Members
+Page
+app/members/page.tsx · MemberCard.tsx · src/data/members.js
+members.js shape
+Grouping logic
+MemberCard: Square avatar ( aspect-square object-cover rounded-xl ), name, role in muted
+text, two icon links. Hover: ring-2 ring-indigo-500 on the avatar. No bios.
+{
+id: 1,
+name: "Anveshan Lead",
+role: "President",
+group: "Core Team", // "Core Team" | "Technical" | "Design" | "Operations"
+avatar: "/images/members/lead.jpg",
+github: "https://github.com/...",
+linkedin: "https://linkedin.com/..."
+}
+const groups = ['Core Team', 'Technical', 'Design', 'Operations']
+groups.map(group => (
+ <section key={group}>
+ <h3>{group}</h3>
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+ {members
+ .filter(m => m.group === group)
+ .map(m => <MemberCard key={m.id} {...m} />)}
+ </div>
+ </section>
+))
+9
+Anish — Blogs
+Page
+app/blogs/page.tsx · src/data/blogs.js
+blogs.js shape
+Feed layout
+Stacked list, not a grid. Each item: large title (hover underline in indigo) → author · date in
+monospace muted text → indigo tags → 2-line excerpt.
+Reading page — app/blogs/[slug]/page.tsx
+Center the content, max-w-2xl mx-auto , text-lg leading-relaxed . No animations on the article
+itself — just clean readable text. Code snippets: bg-zinc-900 text-zinc-100 .
+{
+id: 1,
+title: "Getting Started with CNNs",
+author: "Anish K.",
+date: "2025-07-15",
+tags: ["ML", "Deep Learning"],
+excerpt: "A beginner's walkthrough of CNNs...",
+slug: "intro-cnns"
+}
+/* Tag badge */
+className="bg-indigo-50 text-indigo-600 text-xs font-mono px-2 py-1 rounded"
+10
+0 4 — RULES
+What to
+Avoid
+Don't do this Why
+gradient backgrounds (purple/violet) Looks like every AI-generated site ever
+Inter or Roboto as the only font Generic — use what's specified above
+Glassmorphism on every card Use it once, on one hero element
+More than one accent color Kills visual cohesion across pages
+Animations that fire on every scroll Gets annoying fast, hurts performance
+Different border-radius values per page Inconsistent — pick rounded-xl everywhere
+Hardcoded text in JSX components Edit one data file, not five component files
+Images without fixed aspect ratio Cards break on different screen sizes
+Final
+Checklist
+Before calling a page done, ask yourself:
+Does all content come from the /src/data/ file, not hardcoded in JSX?
+Is every repeated UI element (card, badge, button) a shared component?
+Are you only using #4F46E5 as the accent color?
+Does the page look consistent with the rest of the site (same spacing, font scale, borderradius)?
+Would a stranger understand what this club does within 5 seconds on the landing page?
+Would a CS student want to screenshot this for their portfolio?
+That last question is the bar. If yes, ship it.
+•
+•
+•
+•
+•
+•

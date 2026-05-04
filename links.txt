@@ -1,0 +1,3 @@
+motion dev - https://motion.dev/docs/react-scroll-animations?utm_source=chatgpt.com
+reactbits - https://reactbits.dev/text-animations/text-pressure
+google - https://google.com

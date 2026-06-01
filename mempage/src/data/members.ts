@@ -1,4 +1,4 @@
-export type MemberGroup = "Core Team" | "Technical" | "Design" | "Operations";
+export type MemberGroup = "Core Team" | "Technical" | "Design" | "Operations" | "Marketing" | "Outreach" | "Research";
 
 export type Member = {
   id: number;
@@ -12,7 +12,7 @@ export type Member = {
 
 export type Pod = {
   id: string;
-  name: MemberGroup;
+  name: string;
   lead: string;
   members: Member[];
 };
@@ -277,4 +277,22 @@ export const pods: Pod[] = [
     lead: "Ishan Verma",
     members: members.filter((member) => member.group === "Operations"),
   },
+  {
+    id: "marketing",
+    name: "Marketing",
+    lead: "Sana Kapoor",
+    members: members.filter((member) => member.group === "Core Team").slice(0, 4),
+  },
+  {
+    id: "outreach",
+    name: "Outreach",
+    lead: "Anika Bose",
+    members: members.filter((member) => member.group === "Technical").slice(0, 4),
+  },
+  {
+    id: "research",
+    name: "Research",
+    lead: "Kabir Rao",
+    members: members.filter((member) => member.group === "Design").slice(0, 4),
+  }
 ];

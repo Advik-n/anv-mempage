@@ -80,7 +80,7 @@ function HeroSection() {
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
-    offset: ["start start", "end start"],
+    offset: ["start start", "end center"],
   });
 
   const smoothProgress = useSpring(scrollYProgress, {
@@ -88,9 +88,9 @@ function HeroSection() {
     damping: 24,
     mass: 0.7,
   });
-  const opacity = useTransform(smoothProgress, [0, 0.7], [1, 0]);
-  const scale = useTransform(smoothProgress, [0, 1], [1, 0.95]);
-  const blur = useTransform(smoothProgress, [0, 1], ["blur(0px)", "blur(4px)"]);
+  const opacity = useTransform(smoothProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(smoothProgress, [0, 1], [1, 0.85]);
+  const blur = useTransform(smoothProgress, [0, 0.5], ["blur(0px)", "blur(8px)"]);
   const letterSpacing = useTransform(
     smoothProgress,
     [0, 1],
@@ -98,8 +98,8 @@ function HeroSection() {
   );
 
   return (
-    <section ref={heroRef} className="relative h-[200vh]">
-      <div className="sticky top-0 flex h-screen items-center">
+    <section ref={heroRef} className="relative h-[150vh] w-full">
+      <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
         <motion.div
           className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 text-center"
           style={{
@@ -109,25 +109,25 @@ function HeroSection() {
           }}
         >
           <motion.h1
-            className="text-7xl font-semibold text-heading sm:text-8xl"
+            className="text-8xl font-bold tracking-tight text-heading sm:text-9xl"
             style={{ letterSpacing }}
           >
             ANVESHAN
           </motion.h1>
-          <p className="max-w-xl text-base text-muted sm:text-lg">
+          <p className="max-w-xl text-lg text-muted sm:text-xl font-mono">
             The people behind the ideas
           </p>
           <motion.div
-            className="mt-8 flex flex-col items-center gap-2 text-xs font-mono text-muted"
+            className="mt-16 flex flex-col items-center gap-4 text-xs font-mono text-muted uppercase tracking-widest"
             animate={
               reduceMotion
                 ? { opacity: 1 }
-                : { opacity: [0.4, 1, 0.4], y: [0, 6, 0] }
+                : { opacity: [0.4, 1, 0.4], y: [0, 10, 0] }
             }
-            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
             <span>Scroll</span>
-            <span className="h-5 w-px bg-muted" />
+            <span className="h-10 w-px bg-accent/50" />
           </motion.div>
         </motion.div>
       </div>

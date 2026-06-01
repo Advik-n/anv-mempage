@@ -164,7 +164,7 @@ function PodItem({ pod, index, total, rotation, isActive, onSelect }: PodItemPro
   );
 
   const buttonClassName =
-    "group relative flex h-32 w-32 overflow-hidden flex-col items-center justify-center gap-2 rounded-full border px-4 text-center shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-transform duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base bg-white pointer-events-auto";
+    "group relative flex h-28 w-28 overflow-hidden flex-col items-center justify-center gap-1 rounded-full border px-2 text-center shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-transform duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base bg-white pointer-events-auto";
   const stateBorderClass = isActive ? "border-accent" : "border-zinc-200";
 
   return (

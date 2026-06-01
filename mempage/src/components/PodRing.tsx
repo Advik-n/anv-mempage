@@ -6,9 +6,9 @@ import type { MotionValue } from "framer-motion";
 import {
   motion,
   useReducedMotion,
-  useScroll,
   useSpring,
   useTransform,
+  useMotionValue,
 } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
@@ -23,73 +23,108 @@ type PodRingProps = {
 };
 
 export function PodRing({ pods, activePodId, onSelect }: PodRingProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
-  const [isHovering, setIsHovering] = useState(false);
 
-  const { scrollY } = useScroll();
-  const smoothScroll = useSpring(scrollY, {
-    stiffness: 40,
-    damping: 15,
+  const rawRotation = useMotionValue(0);
+  const scrollRotation = useSpring(rawRotation, {
+    stiffness: 60,
+    damping: 20,
     mass: 0.5,
   });
 
-  const scrollRotation = useTransform(smoothScroll, (y) => y * 0.2); // Multiply pixel scroll distance by 0.2 to get degrees
+  // Handle Dragging
+  const handleDrag = (_: any, info: { delta: { x: number } }) => {
+    rawRotation.set(rawRotation.get() + info.delta.x * 0.5);
+  };
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Allow slight vertical scrolling naturally if needed, but primarily hijack to rotate
+      e.preventDefault();
+      // Increase or decrease rotation smoothly
+      rawRotation.set(rawRotation.get() - (e.deltaY * 0.15));
+    };
+
+    const el = containerRef.current;
+    if (el) {
+      el.addEventListener("wheel", handleWheel, { passive: false });
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, [rawRotation]);
 
   const ringRadius = "clamp(120px, 25vw, 240px)";
 
   return (
-    <div ref={scrollRef} className="relative z-10 mt-8 w-full">
-      <div
-        className="relative px-4 py-8"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
+    <div className="relative w-full py-8">
+      <div 
+        className="relative z-10 w-full mx-auto max-w-2xl"
+        ref={containerRef}
       >
-        <div
-          className="relative h-[420px] w-full md:h-[520px]"
-          style={{ perspective: "1200px" }}
-        >
-          <motion.div
-            className="absolute inset-0"
-            style={{ transformStyle: "preserve-3d" }}
-            animate={{ opacity: activePodId ? 0.35 : 1 }}
-            transition={{ duration: 0.3, ease: easing }}
+        <div className="flex h-[320px] w-full flex-col items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
+          <div
+            className="relative w-full h-full"
+            style={{ perspective: "1200px" }}
           >
             <motion.div
               className="absolute inset-0"
-              style={{
-                rotateY: reduceMotion ? 0 : scrollRotation,
-                transformStyle: "preserve-3d",
-                ["--ring-radius" as string]: ringRadius,
-              }}
+              style={{ transformStyle: "preserve-3d" }}
+              animate={{ opacity: activePodId ? 0.35 : 1 }}
+              transition={{ duration: 0.3, ease: easing }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0}
+              onDrag={handleDrag}
             >
-              {pods.map((pod, index) => (
-                <PodItem
-                  key={pod.id}
-                  pod={pod}
-                  index={index}
-                  total={pods.length}
-                  rotation={scrollRotation}
-                  isActive={activePodId === pod.id}
-                  onSelect={() => onSelect(pod)}
-                />
-              ))}
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  rotateY: reduceMotion ? 0 : scrollRotation,
+                  transformStyle: "preserve-3d",
+                  ["--ring-radius" as string]: ringRadius,
+                }}
+              >
+                {pods.map((pod, index) => (
+                  <PodItem
+                    key={pod.id}
+                    pod={pod}
+                    index={index}
+                    total={pods.length}
+                    rotation={scrollRotation}
+                    isActive={activePodId === pod.id}
+                    onSelect={() => onSelect(pod)}
+                  />
+                ))}
+              </motion.div>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
-        <div className="absolute left-0 right-0 top-full mt-4 flex justify-center pb-8">
-          <AnimatePresence>
-            {activePodId ? (
-              <div className="w-full max-w-4xl px-4 relative z-50">
+      </div>
+
+      <div className="relative z-20 w-full bg-base">
+        <AnimatePresence mode="wait">
+          {activePodId && (
+            <motion.div
+              key={activePodId}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.4, ease: easing }}
+              className="overflow-hidden"
+            >
+              <div className="mx-auto max-w-4xl px-4 pt-12 pb-4">
                 <PodDetailPanel
-                  key={activePodId}
                   pod={pods.find((p) => p.id === activePodId)!}
                   onClose={() => onSelect(null)}
                 />
               </div>
-            ) : null}
-          </AnimatePresence>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -129,7 +164,7 @@ function PodItem({ pod, index, total, rotation, isActive, onSelect }: PodItemPro
   );
 
   const buttonClassName =
-    "group relative flex h-36 w-36 flex-col items-center justify-center gap-3 rounded-xl border px-4 text-center shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-transform duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base";
+    "group relative flex h-32 w-32 overflow-hidden flex-col items-center justify-center gap-2 rounded-full border px-4 text-center shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-transform duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base bg-white pointer-events-auto";
   const stateBorderClass = isActive ? "border-accent" : "border-zinc-200";
 
   return (
@@ -143,17 +178,17 @@ function PodItem({ pod, index, total, rotation, isActive, onSelect }: PodItemPro
       <motion.button
         type="button"
         layoutId={`pod-card-${pod.id}`}
-        className={`${buttonClassName} ${stateBorderClass} bg-white`}
+        className={`${buttonClassName} ${stateBorderClass}`}
         style={{ scale: combinedScale, opacity, filter: blur }}
         aria-pressed={isActive}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         onClick={onSelect}
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-light text-accent transition-colors duration-150 ease-out group-hover:bg-white">
-          <IconOrbit className="h-5 w-5" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-light text-accent transition-colors duration-150 ease-out group-hover:bg-white">
+          <IconOrbit className="h-4 w-4" />
         </span>
-        <span className="text-sm font-semibold text-heading">{pod.name}</span>
+        <span className="text-sm font-semibold text-heading truncate w-full">{pod.name}</span>
         {isActive ? (
           <span className="absolute -bottom-6 text-xs font-mono text-accent">
             Active
